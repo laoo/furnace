@@ -1,6 +1,6 @@
 # Contributing
 
-contributions to Furnace are welcome!
+contributions to Forky are welcome!
 
 # Getting ready
 
@@ -9,7 +9,7 @@ log into your Github account, and click the Fork button in the header of the pro
 then open a terminal and clone your fork:
 
 ```
-git clone git@github.com:USERNAME/furnace.git
+git clone git@github.com:USERNAME/forky.git
 ```
 
 (replace `USERNAME` with your username)
@@ -85,9 +85,7 @@ additional guidelines:
 
 just put your demo song in `demos/`! be noted there are some guidelines:
 
-- avoid Nintendo song covers.
-- avoid big label song covers.
-- low effort compositions/covers may not be accepted at all.
+look at the rules.
 
 # Finishing
 
@@ -96,4 +94,4 @@ then open your fork on GitHub and send a pull request.
 
 # I don't know how to use Git but I want to contribute with a demo song
 
-you can also contact me directly! [find me here.](https://tildearrow.org/?p=contact)
+discord: .monsia.
