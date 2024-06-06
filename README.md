@@ -1,7 +1,7 @@
 # Forky (chiptune DAW)
 
-![screenshot](papers/screenshot2.png)
-  
+![2024060515262535-removebg-preview](https://github.com/laoo/furnace/assets/123202832/e4fce6f1-10bd-4de6-a7c7-1e5f4a6ad847)
+
 a fork of furnace designed for beginners!
 
 [downloads](#downloads) | [discussion/help](#quick-references) | [developer info](#developer-info) | [unofficial packages](#unofficial-packages) | [FAQ](#frequently-asked-questions)
