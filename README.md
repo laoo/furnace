@@ -1,8 +1,8 @@
 # Forky (chiptune DAW)
 
 ![screenshot](papers/screenshot2.png)
-
-a fork of furnac designed for beginners!
+  
+a fork of furnace designed for beginners!
 
 [downloads](#downloads) | [discussion/help](#quick-references) | [developer info](#developer-info) | [unofficial packages](#unofficial-packages) | [FAQ](#frequently-asked-questions)
 
