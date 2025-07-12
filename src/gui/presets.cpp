@@ -280,6 +280,18 @@ void FurnaceGUI::initSystemPresets() {
       }
     );
   ENTRY(
+    _( "Atari 7800 + Minnie" ), {
+      CH( DIV_SYSTEM_TIA, 1.0f, 0, "" ),
+      CH( DIV_SYSTEM_MINIGUMBY, 1.0f, 0, "" )
+    }
+  );
+    SUB_ENTRY(
+      _( "Atari 7800 (with software pitch driver) + Minnie" ), {
+        CH( DIV_SYSTEM_TIA, 1.0f, 0, "softwarePitch=1" ),
+        CH( DIV_SYSTEM_MINIGUMBY, 1.0f, 0, "" )
+      }
+    );
+  ENTRY(
     _("Atari Lynx"), {
       CH(DIV_SYSTEM_LYNX, 1.0f, 0, "")
     }
@@ -3720,6 +3732,11 @@ void FurnaceGUI::initSystemPresets() {
   ENTRY(
     _("Seta/Allumer X1-010"), {
       CH(DIV_SYSTEM_X1_010, 1.0f, 0, "")
+    }
+  );
+  ENTRY(
+    _( "Minnie" ), {
+      CH( DIV_SYSTEM_MINIGUMBY, 1.0f, 0, "" )
     }
   );
   CATEGORY_END;

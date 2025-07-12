@@ -3132,6 +3132,10 @@ void FurnaceGUI::insTabWavetable(DivInstrument* ins)
         wavePreviewLen=64;
         wavePreviewHeight=63;
         break;
+      case DIV_INS_MINNIE:
+        wavePreviewLen=64;
+        wavePreviewHeight=255;
+        break;
       case DIV_INS_N163:
         wavePreviewLen=ins->n163.waveLen;
         wavePreviewHeight=15;
@@ -8000,7 +8004,8 @@ void FurnaceGUI::drawInsEdit() {
             ins->type==DIV_INS_SNES ||
             ins->type==DIV_INS_NAMCO ||
             ins->type==DIV_INS_SM8521 ||
-            (ins->type==DIV_INS_GBA_MINMOD && ins->amiga.useWave)) 
+            ins->type==DIV_INS_MINNIE ||
+            (ins->type==DIV_INS_GBA_MINMOD && ins->amiga.useWave))
         {
           insTabWavetable(ins);
         }
@@ -8684,6 +8689,13 @@ void FurnaceGUI::drawInsEdit() {
               } else {
                 macroList.push_back(FurnaceGUIMacroDesc(_("Sample Mode"),&ins->std.opMacros[1].arMacro,0,1,32,uiColors[GUI_COLOR_MACRO_NOISE],false,NULL,NULL,true));
               }
+              break;
+            case DIV_INS_MINNIE:
+              macroList.push_back( FurnaceGUIMacroDesc( _( "Volume" ), &ins->std.volMacro, 0, 63, 160, uiColors[GUI_COLOR_MACRO_VOLUME] ) );
+              macroList.push_back( FurnaceGUIMacroDesc( _( "Arpeggio" ), &ins->std.arpMacro, -120, 120, 160, uiColors[GUI_COLOR_MACRO_PITCH], true, NULL, macroHoverNote, false, NULL, true, ins->std.arpMacro.val ) );
+              macroList.push_back( FurnaceGUIMacroDesc( _( "Noise" ), &ins->std.dutyMacro, 0, 8, 160, uiColors[GUI_COLOR_MACRO_NOISE] ) );
+              macroList.push_back( FurnaceGUIMacroDesc( _( "Waveform" ), &ins->std.waveMacro, 0, waveCount < 7 ? 7 : waveCount, 160, uiColors[GUI_COLOR_MACRO_WAVE], false, NULL, NULL, false, NULL ) );
+              macroList.push_back( FurnaceGUIMacroDesc( _( "Pitch" ), &ins->std.pitchMacro, -2048, 2047, 160, uiColors[GUI_COLOR_MACRO_PITCH], true, macroRelativeMode ) );
               break;
             case DIV_INS_MAX:
             case DIV_INS_NULL:

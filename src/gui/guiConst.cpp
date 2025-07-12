@@ -187,6 +187,7 @@ const char* insTypes[DIV_INS_MAX+1][3]={
   {"Watara Supervision",ICON_FA_GAMEPAD,ICON_FUR_INS_SUPERVISION},
   {"NEC μPD1771C",ICON_FA_BAR_CHART,ICON_FUR_INS_UPD1771C},
   {"SID3",ICON_FA_KEYBOARD_O,ICON_FUR_INS_SID3},
+  {"Minnie",ICON_FA_PIE_CHART,ICON_FUR_INS_MINNIE},
   {NULL,ICON_FA_QUESTION,ICON_FA_QUESTION}
 };
 
@@ -1324,6 +1325,7 @@ const int availableSystems[]={
   DIV_SYSTEM_SUPERVISION,
   DIV_SYSTEM_UPD1771C,
   DIV_SYSTEM_SID3,
+  DIV_SYSTEM_MINIGUMBY,
   0 // don't remove this last one!
 };
 
@@ -1397,6 +1399,7 @@ const int chipsWave[]={
   DIV_SYSTEM_NAMCO,
   DIV_SYSTEM_NAMCO_15XX,
   DIV_SYSTEM_NAMCO_CUS30,
+  DIV_SYSTEM_MINIGUMBY,
   0 // don't remove this last one!
 };
 

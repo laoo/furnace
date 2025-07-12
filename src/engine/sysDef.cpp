@@ -2333,6 +2333,16 @@ void DivEngine::registerSystems() {
     c64PostEffectHandlerMap
   );
 
+  sysDefs[DIV_SYSTEM_MINIGUMBY]=new DivSysDef(
+    _("Minnie"), NULL, 0xc9, 0, 3, false, true, 0, false, 0, 64, 256,
+    _("a wavetable sound chip designed as an in-cart audio solution for the 7800 console."),
+    {_("Channel 1"), _("Channel 2"), _("Channel 3")},
+    {"CH1", "CH2", "CH3"},
+    {DIV_CH_WAVE, DIV_CH_WAVE, DIV_CH_WAVE},
+    {DIV_INS_MINNIE, DIV_INS_MINNIE, DIV_INS_MINNIE},
+    {}
+  );
+
   sysDefs[DIV_SYSTEM_DUMMY]=new DivSysDef(
     _("Dummy System"), NULL, 0xfd, 0, 8, false, true, 0, false, 0, 0, 0,
     _("this is a system designed for testing purposes."),

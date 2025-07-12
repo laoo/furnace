@@ -78,6 +78,7 @@
 #define ICON_FUR_INS_SUPERVISION u8"\ue162"
 #define ICON_FUR_INS_UPD1771C u8"\ue163"
 #define ICON_FUR_INS_SID3 u8"\ue164"
+#define ICON_FUR_INS_MINNIE u8"\ue166"
 
 // sample editor
 #define ICON_FUR_SAMPLE_APPLY_SILENCE u8"\ue136"
