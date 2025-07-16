@@ -156,7 +156,7 @@ uint16_t minnie_device::next_noise()
 
 void minnie_device::sound_channel::set_volume( uint8_t value )
 {
-  volume_mantissa = ( 16 | ( ( value >> 1 ) & 7 ) ) << 2;
+  volume_mantissa = ( 8 | ( ( value >> 1 ) & 7 ) ) << 3;
   volume_exponent = ( value >> 4 ) & 7;
 }
 

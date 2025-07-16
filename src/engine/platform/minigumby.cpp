@@ -178,7 +178,7 @@ void DivPlatformMiniGumby::tick( bool sysTick )
   // update state
   if ( chan[0].active && !isMuted[0] )
   {
-    uint8_t v = chan[0].outVol & 0x0f | ( 0x40 - chan[0].outVol & 0xf0 );
+    uint8_t v = chan[0].outVol & 0x0f | ( 0x40 - chan[0].outVol - 1 ) & 0xf0;
     uint8_t n = chan[0].noise ? 0x07 + chan[0].noise : 0;
     rWrite( minnie_device::VOL1, v );
     rWrite( minnie_device::TIMBRE1, ( chan[0].wave & 7 ) | ( n << 4 ) );
@@ -189,7 +189,7 @@ void DivPlatformMiniGumby::tick( bool sysTick )
   }
   if ( chan[1].active && !isMuted[1] )
   {
-    uint8_t v = chan[1].outVol & 0x0f | ( 0x40 - chan[1].outVol & 0xf0 );
+    uint8_t v = chan[1].outVol & 0x0f | ( 0x40 - chan[1].outVol - 1 ) & 0xf0;
     uint8_t n = chan[1].noise ? 0x07 + chan[0].noise : 0;
     rWrite( minnie_device::VOL2, v );
     rWrite( minnie_device::TIMBRE2, ( chan[1].wave & 7 ) | ( n << 4 ) );
@@ -200,7 +200,7 @@ void DivPlatformMiniGumby::tick( bool sysTick )
   }
   if ( chan[2].active && !isMuted[2] )
   {
-    uint8_t v = chan[2].outVol & 0x0f | ( 0x40 - chan[2].outVol & 0xf0 );
+    uint8_t v = chan[2].outVol & 0x0f | ( 0x40 - chan[2].outVol - 1 ) & 0xf0;
     uint8_t n = chan[2].noise ? 0x07 + chan[0].noise : 0;
     rWrite( minnie_device::VOL3, v );
     rWrite( minnie_device::TIMBRE3, ( chan[2].wave & 7 ) | ( n << 4 ) );
