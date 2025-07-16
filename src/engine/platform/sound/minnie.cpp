@@ -208,7 +208,7 @@ int16_t minnie_device::sound_channel::sawtooth( uint8_t index ) const
 }
 int16_t minnie_device::sound_channel::square( uint8_t index ) const
 {
-  return (int8_t)( index & 0x80 );
+  return index & 0x80 ? -128 : 127;
 }
 int16_t minnie_device::sound_channel::triangle( uint8_t index ) const
 {
