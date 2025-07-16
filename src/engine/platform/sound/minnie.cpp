@@ -212,6 +212,7 @@ int16_t minnie_device::sound_channel::square( uint8_t index ) const
 }
 int16_t minnie_device::sound_channel::triangle( uint8_t index ) const
 {
-  return (int8_t)( ( ( index << 1 ) ^ ( (int8_t)( index & 0x80 ) >> 7 ) ) + 0x80 );
+  int8_t mask = index & 0x80 ? 0x7e : 0x80;
+  return (int8_t)( ( index << 1 ) ^ mask );
 }
 
