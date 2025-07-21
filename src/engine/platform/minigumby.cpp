@@ -190,7 +190,7 @@ void DivPlatformMiniGumby::tick( bool sysTick )
   if ( chan[1].active && !isMuted[1] )
   {
     uint8_t v = chan[1].outVol & 0x0f | ( 0x40 - chan[1].outVol - 1 ) & 0xf0;
-    uint8_t n = chan[1].noise ? 0x07 + chan[0].noise : 0;
+    uint8_t n = chan[1].noise ? 0x07 + chan[1].noise : 0;
     rWrite( minnie_device::VOL2, v );
     rWrite( minnie_device::TIMBRE2, ( chan[1].wave & 7 ) | ( n << 4 ) );
   }
@@ -201,7 +201,7 @@ void DivPlatformMiniGumby::tick( bool sysTick )
   if ( chan[2].active && !isMuted[2] )
   {
     uint8_t v = chan[2].outVol & 0x0f | ( 0x40 - chan[2].outVol - 1 ) & 0xf0;
-    uint8_t n = chan[2].noise ? 0x07 + chan[0].noise : 0;
+    uint8_t n = chan[2].noise ? 0x07 + chan[2].noise : 0;
     rWrite( minnie_device::VOL3, v );
     rWrite( minnie_device::TIMBRE3, ( chan[2].wave & 7 ) | ( n << 4 ) );
   }
@@ -231,6 +231,7 @@ int DivPlatformMiniGumby::dispatch( DivCommand c )
       chan[c.chan].freqChanged = true;
       chan[c.chan].note = c.value;
     }
+    chan[c.chan].noise = 0;
     chan[c.chan].active = true;
     chan[c.chan].keyOn = true;
     chan[c.chan].macroInit( ins );
@@ -243,7 +244,7 @@ int DivPlatformMiniGumby::dispatch( DivCommand c )
       chan[c.chan].wave = 0;
       chan[c.chan].ws.changeWave1( chan[c.chan].wave );
     }
-    chan[c.chan].ws.init( ins, 32, 15, chan[c.chan].insChanged );
+    chan[c.chan].ws.init( ins, 64, 255, chan[c.chan].insChanged );
     chan[c.chan].insChanged = false;
     break;
   }
@@ -319,10 +320,6 @@ int DivPlatformMiniGumby::dispatch( DivCommand c )
     }
     break;
   }
-  case DIV_CMD_STD_NOISE_MODE:
-    chan[c.chan].noise = c.value;
-    chan[c.chan].freqChanged = true;
-    break;
   case DIV_CMD_PANNING:
     break;
   case DIV_CMD_LEGATO:
