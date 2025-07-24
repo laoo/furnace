@@ -2756,6 +2756,25 @@ bool FurnaceGUI::drawSysConf(int chan, int sysPos, DivSystem type, DivConfig& fl
       }
       break;
     }
+    case DIV_SYSTEM_MINIGUMBY: {
+      bool ramMode = flags.getBool("ramMode", false);
+      bool noiseFreq = flags.getBool("noiseFreq", false);
+
+      if (ImGui::Checkbox(_("4 RAM wavetables"), &ramMode)) {
+        altered = true;
+      }
+      if (ImGui::Checkbox(_("Noise frequency"), &noiseFreq)) {
+        altered = true;
+      }
+
+      if (altered) {
+        e->lockSave( [&]() {
+            flags.set("ramMode",ramMode);
+            flags.set("noiseFreq",noiseFreq);
+        });
+      }
+      break;
+    }
     default: {
       bool sysPal=flags.getInt("clockSel",0);
 

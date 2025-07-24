@@ -29,6 +29,7 @@
 class DivPlatformMiniGumby: public DivDispatch {
   struct Channel: public SharedChannel<signed char> {
     int noise;
+    int noiseFreq;
     signed short wave;
     DivWaveSynth ws;
     Channel():
@@ -47,6 +48,9 @@ class DivPlatformMiniGumby: public DivDispatch {
   FixedQueue<QueuedWrite,256> writes;
 
   minnie_device* minnie;
+  bool ramMode = false;
+  bool noiseFreq = false;
+
   std::array<unsigned char,32> regPool;
   void updateROMWaves();
   void updateROMWave( size_t i );

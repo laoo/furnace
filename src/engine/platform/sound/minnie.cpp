@@ -39,9 +39,16 @@ void minnie_device::device_start()
     voice.index = 0;
     voice.volume_mantissa = 0;
     voice.volume_exponent = 0;
-    voice.noise_shift = 16;
+    voice.noise_shift = -1;
+    voice.noise_freq = -1;
     voice.waveform_index = 0;
+    voice.lfsr = 1;
   }
+}
+
+void minnie_device::set_ram_mode( bool ram_mode )
+{
+  m_ram_mode = ram_mode;
 }
 
 void minnie_device::poke( size_t offset, uint8_t data )
@@ -66,6 +73,9 @@ void minnie_device::poke( size_t offset, uint8_t data )
   case INDEX1H:
     m_channels[0].index = ( m_channels[0].index & 0x00ff ) | ( data << 8 );
     break;
+  case TIMBEX1:
+    m_channels[0].set_timbre_ex( data );
+    break;
   case FREQ2L:
     m_channels[1].frequency = ( m_channels[1].frequency & 0xff00 ) | data;
     break;
@@ -83,6 +93,9 @@ void minnie_device::poke( size_t offset, uint8_t data )
     break;
   case INDEX2H:
     m_channels[1].index = ( m_channels[1].index & 0x00ff ) | ( data << 8 );
+    break;
+  case TIMBEX2:
+    m_channels[1].set_timbre_ex( data );
     break;
   case FREQ3L:
     m_channels[2].frequency = ( m_channels[2].frequency & 0xff00 ) | data;
@@ -102,6 +115,9 @@ void minnie_device::poke( size_t offset, uint8_t data )
   case INDEX3H:
     m_channels[2].index = ( m_channels[2].index & 0x00ff ) | ( data << 8 );
     break;
+  case TIMBEX3:
+    m_channels[2].set_timbre_ex( data );
+    break;
   default:
     break;
   }
@@ -117,16 +133,14 @@ void minnie_device::update_waveform( size_t waveform, size_t offset, uint8_t dat
 
 int16_t minnie_device::sample_audio( int16_t* chanBuf )
 {
-  uint16_t noise = next_noise();
+
   int16_t sample = 0;
 
   if ( m_sound_enable )
   {
     for ( size_t i = 0; i < m_channels.size(); ++i )
     {
-      int16_t voice_sample = m_channels[i].sample_voice( static_cast<int16_t>( noise ), m_waveram.data() );
-      chanBuf[i] = voice_sample;
-      sample += voice_sample;
+      chanBuf[i] = m_channels[i].sample_voice( m_waveram.data(), m_ram_mode, sample );
     }
   }
 
@@ -148,48 +162,51 @@ void minnie_device::update_reg_pool( std::array<unsigned char, 32>& reg )
   reg[INDEX3H] = ( m_channels[2].index >> 8 ) & 0xff;
 }
 
-uint16_t minnie_device::next_noise()
-{
-  m_lfsr = m_lfsr >> 1 | ( ( ( m_lfsr >> 3 ) ^ m_lfsr ) << 15 );
-  return m_lfsr;
-}
 
 void minnie_device::sound_channel::set_volume( uint8_t value )
 {
-  volume_mantissa = ( 8 | ( ( value >> 1 ) & 7 ) ) << 3;
+  volume_mantissa = ( 8 | ( ( value >> 1 ) & 7 ) ) << 2;
   volume_exponent = ( value >> 4 ) & 7;
 }
 
 void minnie_device::sound_channel::set_timbre( uint8_t value )
 {
   waveform_index = value & 7;
-  noise_shift = value & 0x80 ? 7 - ( ( value >> 4 ) & 7 ) : ~0;
+  noise_shift = value & 0x80 ? 7 - ( ( value >> 4 ) & 7 ) : -1;
 }
 
-int16_t minnie_device::sound_channel::sample_voice( int16_t noise, uint8_t const* waveform )
+void minnie_device::sound_channel::set_timbre_ex( uint8_t value )
 {
-  index += frequency;
-  int32_t modulation = noise_shift == ~0 ? 0 : static_cast<int32_t>( noise ) >> noise_shift;
+  noise_freq = value & 0x80 ? value >> 4 : -1;
+}
 
-  int16_t s = sample( index + modulation, waveform );
+int16_t minnie_device::sound_channel::sample_voice( uint8_t const* waveform, bool ram_mode, int16_t & t )
+{
+  int16_t noise = advance_index_and_compute_noise();
+
+  int32_t modulation = noise_shift < 0 ? 0 : static_cast<int32_t>( noise ) >> noise_shift;
+
+  int16_t s = sample( index + modulation, ram_mode, waveform );
   int16_t smul = s * volume_mantissa;
   int16_t sexp = smul >> volume_exponent;
+
+  t += sexp;
 
   return sexp;
 }
 
-int16_t minnie_device::sound_channel::sample( uint16_t index, uint8_t const* waveform ) const
+int16_t minnie_device::sound_channel::sample( uint16_t index, bool ram_mode, uint8_t const* waveform ) const
 {
   switch ( waveform_index )
   {
   case 0:
-    return *( waveform + WAVETABLE_SIZE * 0 + ( index >> 10 ) );
+    return ( *( waveform + WAVETABLE_SIZE * 0 + ( index >> 10 ) ) - 128 );
   case 1:
-    return *( waveform + WAVETABLE_SIZE * 1 + ( index >> 10 ) );
+    return ( *( waveform + WAVETABLE_SIZE * 1 + ( index >> 10 ) ) - 128 );
   case 2:
-    return *( waveform + WAVETABLE_SIZE * 2 + ( index >> 10 ) );
+    return ram_mode ? ( *( waveform + WAVETABLE_SIZE * 2 + ( index >> 10 ) ) - 128 ) : 0;
   case 3:
-    return *( waveform + WAVETABLE_SIZE * 3 + ( index >> 10 ) );
+    return ram_mode ? ( *( waveform + WAVETABLE_SIZE * 3 + ( index >> 10 ) ) - 128 ) : 0;
   case 5:
     return sawtooth( index >> 8 );
   case 6:
@@ -216,5 +233,19 @@ int16_t minnie_device::sound_channel::triangle( uint8_t index ) const
   //0x80 is to convert unsigned index to signed result.
   int8_t mask = index & 0x80 ? 0x7e : 0x80;
   return (int8_t)( ( index << 1 ) ^ mask );
+}
+
+uint16_t minnie_device::sound_channel::advance_index_and_compute_noise()
+{
+  uint16_t oldIndex = index;
+  index += frequency;
+  //if noise frequency is valid value 8-15, then we use it to compute LFSR clock
+  //as a "noise_freq"s bit of the index, i.e. LFSR is shifted when the bit transits from 0 to 1
+  //it works progressively for note frequencies lower than 2^noise_freq, for higher frequencies it's more or less random
+  auto clock = index & ~oldIndex & ( 1 << noise_freq );
+  
+  if ( noise_freq < 0 || ( clock != 0 ) )
+    lfsr = lfsr >> 1 | ( ( ( lfsr >> 3 ) ^ lfsr ) << 15 );
+  return lfsr;
 }
 

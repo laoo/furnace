@@ -52,18 +52,21 @@ const char** DivPlatformMiniGumby::getRegisterSheet()
     "Timbre1",  hex_to_string<minnie_device::TIMBRE1>::buf,
     "Index1L",  hex_to_string<minnie_device::INDEX1L>::buf,
     "Index1H",  hex_to_string<minnie_device::INDEX1H>::buf,
+    "TimbEx1",  hex_to_string<minnie_device::TIMBEX1>::buf,
     "Freq2L",   hex_to_string<minnie_device::FREQ2L>::buf,
     "Freq2H",   hex_to_string<minnie_device::FREQ2H>::buf,
     "Vol2",     hex_to_string<minnie_device::VOL2>::buf,
     "Timbre2",  hex_to_string<minnie_device::TIMBRE2>::buf,
     "Index2L",  hex_to_string<minnie_device::INDEX2L>::buf,
     "Index2H",  hex_to_string<minnie_device::INDEX2H>::buf,
+    "TimbEx2",  hex_to_string<minnie_device::TIMBEX2>::buf,
     "Freq3L",   hex_to_string<minnie_device::FREQ3L>::buf,
     "Freq3H",   hex_to_string<minnie_device::FREQ3H>::buf,
     "Vol3",     hex_to_string<minnie_device::VOL3>::buf,
     "Timbre3",  hex_to_string<minnie_device::TIMBRE3>::buf,
     "Index3L",  hex_to_string<minnie_device::INDEX3L>::buf,
     "Index3H",  hex_to_string<minnie_device::INDEX3H>::buf,
+    "TimbEx3",  hex_to_string<minnie_device::TIMBEX3>::buf,
     NULL
   };
 
@@ -114,7 +117,10 @@ void DivPlatformMiniGumby::tick( bool sysTick )
     if ( chan[i].std.duty.had )
     {
       chan[i].noise = chan[i].std.duty.val;
-      chan[i].freqChanged = true;
+    }
+    if ( chan[i].std.ex1.had )
+    {
+      chan[i].noiseFreq = chan[i].std.ex1.val;
     }
     if ( NEW_ARP_STRAT )
     {
@@ -181,7 +187,9 @@ void DivPlatformMiniGumby::tick( bool sysTick )
     uint8_t v = chan[0].outVol & 0x0f | ( 0x40 - chan[0].outVol - 1 ) & 0xf0;
     uint8_t n = chan[0].noise ? 0x07 + chan[0].noise : 0;
     rWrite( minnie_device::VOL1, v );
+    uint8_t nf = chan[0].noiseFreq ? 0x07 + chan[0].noiseFreq : 0;
     rWrite( minnie_device::TIMBRE1, ( chan[0].wave & 7 ) | ( n << 4 ) );
+    rWrite( minnie_device::TIMBEX1, ( nf << 4 ) );
   }
   else
   {
@@ -192,7 +200,9 @@ void DivPlatformMiniGumby::tick( bool sysTick )
     uint8_t v = chan[1].outVol & 0x0f | ( 0x40 - chan[1].outVol - 1 ) & 0xf0;
     uint8_t n = chan[1].noise ? 0x07 + chan[1].noise : 0;
     rWrite( minnie_device::VOL2, v );
+    uint8_t nf = chan[1].noiseFreq ? 0x07 + chan[1].noiseFreq : 0;
     rWrite( minnie_device::TIMBRE2, ( chan[1].wave & 7 ) | ( n << 4 ) );
+    rWrite( minnie_device::TIMBEX2, ( nf << 4 ) );
   }
   else
   {
@@ -203,7 +213,9 @@ void DivPlatformMiniGumby::tick( bool sysTick )
     uint8_t v = chan[2].outVol & 0x0f | ( 0x40 - chan[2].outVol - 1 ) & 0xf0;
     uint8_t n = chan[2].noise ? 0x07 + chan[2].noise : 0;
     rWrite( minnie_device::VOL3, v );
+    uint8_t nf = chan[2].noiseFreq ? 0x07 + chan[2].noiseFreq : 0;
     rWrite( minnie_device::TIMBRE3, ( chan[2].wave & 7 ) | ( n << 4 ) );
+    rWrite( minnie_device::TIMBEX3, ( nf << 4 ) );
   }
   else
   {
@@ -232,6 +244,7 @@ int DivPlatformMiniGumby::dispatch( DivCommand c )
       chan[c.chan].note = c.value;
     }
     chan[c.chan].noise = 0;
+    chan[c.chan].noiseFreq = 0;
     chan[c.chan].active = true;
     chan[c.chan].keyOn = true;
     chan[c.chan].macroInit( ins );
@@ -415,6 +428,7 @@ void DivPlatformMiniGumby::reset()
     addWrite( 0xffffffff, 0 );
   }
   minnie->device_start();
+  minnie->set_ram_mode( ramMode );
 
   updateROMWaves();
 }
@@ -443,6 +457,9 @@ void DivPlatformMiniGumby::updateROMWave( size_t i )
   int data = 0;
   DivWavetable* w = parent->getWave( i );
 
+  if ( ramMode && i >= 0 && i < 4 )
+    rWrite( minnie_device::WAVEIDX, i );
+
   for ( int j = 0; j < 64; j++ )
   {
     if ( w->max < 1 || w->len < 1 )
@@ -455,7 +472,15 @@ void DivPlatformMiniGumby::updateROMWave( size_t i )
       if ( data < 0 ) data = 0;
       if ( data > 255 ) data = 255;
     }
-    minnie->update_waveform( i, j, data );
+
+    if ( ramMode )
+    {
+      rWrite( minnie_device::WAVEDAT, data );
+    }
+    else
+    {
+      minnie->update_waveform( i, j, data );
+    }
   }
 }
 
@@ -488,6 +513,8 @@ void DivPlatformMiniGumby::setFlags( const DivConfig& flags )
   {
     oscBuf[i]->setRate( rate );
   }
+  ramMode = flags.getBool( "ramMode", false );
+  noiseFreq = flags.getBool( "noiseFreq", false );
 }
 
 void DivPlatformMiniGumby::poke( unsigned int addr, unsigned short val )

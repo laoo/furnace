@@ -20,6 +20,7 @@ public:
   static constexpr const size_t TIMBRE1 = 0x03;
   static constexpr const size_t INDEX1L = 0x04;
   static constexpr const size_t INDEX1H = 0x05;
+  static constexpr const size_t TIMBEX1 = 0x06; //extension
 
   static constexpr const size_t FREQ2L  = 0x08;
   static constexpr const size_t FREQ2H  = 0x09;
@@ -27,6 +28,7 @@ public:
   static constexpr const size_t TIMBRE2 = 0x0b;
   static constexpr const size_t INDEX2L = 0x0c;
   static constexpr const size_t INDEX2H = 0x0d;
+  static constexpr const size_t TIMBEX2 = 0x0e; //extension
 
   static constexpr const size_t FREQ3L  = 0x10;
   static constexpr const size_t FREQ3H  = 0x11;
@@ -34,6 +36,13 @@ public:
   static constexpr const size_t TIMBRE3 = 0x13;
   static constexpr const size_t INDEX3L = 0x14;
   static constexpr const size_t INDEX3H = 0x15;
+  static constexpr const size_t TIMBEX3 = 0x16; //extension
+
+  static constexpr const size_t WAVEIDX = 0x1e; //extension
+  static constexpr const size_t WAVEDAT = 0x1f; //extension
+
+
+
 
 
   struct sound_channel
@@ -42,16 +51,20 @@ public:
     uint16_t index;
     int16_t volume_mantissa;
     int16_t volume_exponent;
-    uint16_t noise_shift;
+    int16_t noise_shift;
+    int16_t noise_freq;
     uint16_t waveform_index;
+    uint16_t lfsr;
 
     void set_volume( uint8_t value );
     void set_timbre( uint8_t value );
+    void set_timbre_ex( uint8_t value );
 
-    int16_t sample_voice( int16_t noise, uint8_t const* waveform );
+    int16_t sample_voice( uint8_t const* waveform, bool ram_mode, int16_t & t );
+    uint16_t advance_index_and_compute_noise();
 
   private:
-    int16_t sample( uint16_t index, uint8_t const* waveform ) const;
+    int16_t sample( uint16_t index, bool ram_mode, uint8_t const* waveform ) const;
     int16_t sawtooth( uint8_t index ) const;
     int16_t square( uint8_t index ) const;
     int16_t triangle( uint8_t index ) const;
@@ -62,6 +75,7 @@ public:
 
   // device-level overrides
   void device_start();
+  void set_ram_mode( bool ram_mode );
   void poke( size_t offset, uint8_t data );
   void update_waveform( size_t waveform, size_t offset, uint8_t data );
   int16_t sample_audio( int16_t* chanBuf );
@@ -69,13 +83,11 @@ public:
   void update_reg_pool( std::array<unsigned char, 32> & reg );
 
 private:
-  uint16_t next_noise();
-
   std::array<sound_channel, VOICES> m_channels = {};
   std::array<uint8_t, WAVETABLE_SIZE * WAVETABLES_COUNT> m_waveram;
   std::array<uint8_t, SOUND_REGS> m_soundregs;
-  uint16_t m_lfsr = 1;
   bool m_sound_enable = true;
+  bool m_ram_mode;
 };
 
 #endif // MINNIE_H

@@ -821,6 +821,16 @@ String macroSID3WaveMixMode(int id, float val, void* u) {
   return _(sid3WaveMixModes[(int)val]);
 }
 
+String macroHoverMinnieVolume( int id, float val, void* u )
+{
+  int v = (int)val;
+  int v2 = v & 0x0f | ( 0x40 - v - 1 ) & 0xf0;
+  float f = 1.0f + (float)( v2 & 0x08 ) / 16.0f + (float)( v2 & 0x04 ) / 16.0f + (float)( v2 & 0x02 ) / 16.0f;
+  int exp = v2 >> 4;
+  float pow = std::powf( 2.0f, -(float)exp );
+  return fmt::sprintf( "%f", f * pow );
+}
+
 void addAALine(ImDrawList* dl, const ImVec2& p1, const ImVec2& p2, const ImU32 color, float thickness=1.0f) {
   ImVec2 pt[2];
   pt[0]=p1;
@@ -8690,13 +8700,23 @@ void FurnaceGUI::drawInsEdit() {
                 macroList.push_back(FurnaceGUIMacroDesc(_("Sample Mode"),&ins->std.opMacros[1].arMacro,0,1,32,uiColors[GUI_COLOR_MACRO_NOISE],false,NULL,NULL,true));
               }
               break;
-            case DIV_INS_MINNIE:
-              macroList.push_back( FurnaceGUIMacroDesc( _( "Volume" ), &ins->std.volMacro, 0, 63, 160, uiColors[GUI_COLOR_MACRO_VOLUME] ) );
+            case DIV_INS_MINNIE: {
+              bool noiseFreq = false;
+              for (int i=0; i<e->song.systemLen; i++) {
+                if (e->song.system[i]==DIV_SYSTEM_MINIGUMBY) {
+                  noiseFreq |= e->song.systemFlags[i].getBool( "noiseFreq", false );
+                }
+              }
+              macroList.push_back( FurnaceGUIMacroDesc( _( "Volume" ), &ins->std.volMacro, 0, 63, 160, uiColors[GUI_COLOR_MACRO_VOLUME], false, NULL, macroHoverMinnieVolume ) );
               macroList.push_back( FurnaceGUIMacroDesc( _( "Arpeggio" ), &ins->std.arpMacro, -120, 120, 160, uiColors[GUI_COLOR_MACRO_PITCH], true, NULL, macroHoverNote, false, NULL, true, ins->std.arpMacro.val ) );
               macroList.push_back( FurnaceGUIMacroDesc( _( "Noise" ), &ins->std.dutyMacro, 0, 8, 160, uiColors[GUI_COLOR_MACRO_NOISE] ) );
+              if ( noiseFreq ) {
+                macroList.push_back( FurnaceGUIMacroDesc( _( "Noise Freq" ), &ins->std.ex1Macro, 0, 8, 160, uiColors[GUI_COLOR_MACRO_NOISE] ) );
+              }
               macroList.push_back( FurnaceGUIMacroDesc( _( "Waveform" ), &ins->std.waveMacro, 0, waveCount < 7 ? 7 : waveCount, 160, uiColors[GUI_COLOR_MACRO_WAVE], false, NULL, NULL, false, NULL ) );
               macroList.push_back( FurnaceGUIMacroDesc( _( "Pitch" ), &ins->std.pitchMacro, -2048, 2047, 160, uiColors[GUI_COLOR_MACRO_PITCH], true, macroRelativeMode ) );
               break;
+            }
             case DIV_INS_MAX:
             case DIV_INS_NULL:
               break;
