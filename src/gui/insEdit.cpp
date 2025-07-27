@@ -828,7 +828,7 @@ String macroHoverMinnieVolume( int id, float val, void* u )
   float f = 1.0f + (float)( v2 & 0x08 ) / 16.0f + (float)( v2 & 0x04 ) / 16.0f + (float)( v2 & 0x02 ) / 16.0f;
   int exp = v2 >> 4;
   float pow = std::powf( 2.0f, -(float)exp );
-  return fmt::sprintf( "%f", f * pow );
+  return fmt::sprintf( "%0.3f", f * pow );
 }
 
 void addAALine(ImDrawList* dl, const ImVec2& p1, const ImVec2& p2, const ImU32 color, float thickness=1.0f) {
