@@ -27,7 +27,8 @@
 #define SAMPLING_FREQUENCY (28000)
 #define CHIP_FREQBASE (65536 / 16)
 
-
+namespace
+{
 static constexpr char hex_digit_to_char( int digit )
 {
   return digit < 10 ? static_cast<char>( '0' + digit ) : static_cast<char>( 'A' + digit - 10 );
@@ -36,12 +37,35 @@ static constexpr char hex_digit_to_char( int digit )
 template<int value>
 struct hex_to_string
 {
-  static constexpr char buf[] = {
+  static constexpr char buf[3] = {
     hex_digit_to_char( ( value >> 4 & 0x0f ) ),
     hex_digit_to_char( value & 0x0f ),
     '\0'
   };
 };
+
+template<> constexpr char hex_to_string<minnie_device::FREQ1L>::buf[3];
+template<> constexpr char hex_to_string<minnie_device::FREQ1H>::buf[3];
+template<> constexpr char hex_to_string<minnie_device::VOL1>::buf[3];
+template<> constexpr char hex_to_string<minnie_device::TIMBRE1>::buf[3];
+template<> constexpr char hex_to_string<minnie_device::INDEX1L>::buf[3];
+template<> constexpr char hex_to_string<minnie_device::INDEX1H>::buf[3];
+template<> constexpr char hex_to_string<minnie_device::TIMBEX1>::buf[3];
+template<> constexpr char hex_to_string<minnie_device::FREQ2L>::buf[3];
+template<> constexpr char hex_to_string<minnie_device::FREQ2H>::buf[3];
+template<> constexpr char hex_to_string<minnie_device::VOL2>::buf[3];
+template<> constexpr char hex_to_string<minnie_device::TIMBRE2>::buf[3];
+template<> constexpr char hex_to_string<minnie_device::INDEX2L>::buf[3];
+template<> constexpr char hex_to_string<minnie_device::INDEX2H>::buf[3];
+template<> constexpr char hex_to_string<minnie_device::TIMBEX2>::buf[3];
+template<> constexpr char hex_to_string<minnie_device::FREQ3L>::buf[3];
+template<> constexpr char hex_to_string<minnie_device::FREQ3H>::buf[3];
+template<> constexpr char hex_to_string<minnie_device::VOL3>::buf[3];
+template<> constexpr char hex_to_string<minnie_device::TIMBRE3>::buf[3];
+template<> constexpr char hex_to_string<minnie_device::INDEX3L>::buf[3];
+template<> constexpr char hex_to_string<minnie_device::INDEX3H>::buf[3];
+template<> constexpr char hex_to_string<minnie_device::TIMBEX3>::buf[3];
+}
 
 const char** DivPlatformMiniGumby::getRegisterSheet()
 {
@@ -93,13 +117,13 @@ void DivPlatformMiniGumby::acquire( short** buf, size_t len )
     short chanBuf[3];
 
     buf[0][h] = minnie->sample_audio( chanBuf );
-    for ( int i = 0; i < oscBuf.size(); i++ )
+    for ( size_t i = 0; i < oscBuf.size(); i++ )
     {
       oscBuf[i]->putSample( h, chanBuf[i] );
     }
   }
 
-  for ( int i = 0; i < oscBuf.size(); i++ )
+  for ( size_t i = 0; i < oscBuf.size(); i++ )
   {
     oscBuf[i]->end( len );
   }
@@ -107,7 +131,7 @@ void DivPlatformMiniGumby::acquire( short** buf, size_t len )
 
 void DivPlatformMiniGumby::tick( bool sysTick )
 {
-  for ( int i = 0; i < chan.size(); i++ )
+  for ( size_t i = 0; i < chan.size(); i++ )
   {
     chan[i].std.next();
     if ( chan[i].std.vol.had )
@@ -184,7 +208,7 @@ void DivPlatformMiniGumby::tick( bool sysTick )
   // update state
   if ( chan[0].active && !isMuted[0] )
   {
-    uint8_t v = chan[0].outVol & 0x0f | ( 0x40 - chan[0].outVol - 1 ) & 0xf0;
+    uint8_t v = ( chan[0].outVol & 0x0f ) | ( ( 0x40 - chan[0].outVol - 1 ) & 0xf0 );
     uint8_t n = chan[0].noise ? 0x07 + chan[0].noise : 0;
     rWrite( minnie_device::VOL1, v );
     uint8_t nf = chan[0].noiseFreq ? 0x07 + chan[0].noiseFreq : 0;
@@ -197,7 +221,7 @@ void DivPlatformMiniGumby::tick( bool sysTick )
   }
   if ( chan[1].active && !isMuted[1] )
   {
-    uint8_t v = chan[1].outVol & 0x0f | ( 0x40 - chan[1].outVol - 1 ) & 0xf0;
+    uint8_t v = ( chan[1].outVol & 0x0f ) | ( ( 0x40 - chan[1].outVol - 1 ) & 0xf0 );
     uint8_t n = chan[1].noise ? 0x07 + chan[1].noise : 0;
     rWrite( minnie_device::VOL2, v );
     uint8_t nf = chan[1].noiseFreq ? 0x07 + chan[1].noiseFreq : 0;
@@ -210,7 +234,7 @@ void DivPlatformMiniGumby::tick( bool sysTick )
   }
   if ( chan[2].active && !isMuted[2] )
   {
-    uint8_t v = chan[2].outVol & 0x0f | ( 0x40 - chan[2].outVol - 1 ) & 0xf0;
+    uint8_t v = ( chan[2].outVol & 0x0f ) | ( ( 0x40 - chan[2].outVol - 1 ) & 0xf0 );
     uint8_t n = chan[2].noise ? 0x07 + chan[2].noise : 0;
     rWrite( minnie_device::VOL3, v );
     uint8_t nf = chan[2].noiseFreq ? 0x07 + chan[2].noiseFreq : 0;
@@ -373,7 +397,7 @@ void DivPlatformMiniGumby::muteChannel( int ch, bool mute )
 
 void DivPlatformMiniGumby::forceIns()
 {
-  for ( int i = 0; i < chan.size(); i++ )
+  for ( size_t i = 0; i < chan.size(); i++ )
   {
     chan[i].insChanged = true;
     chan[i].freqChanged = true;
@@ -416,7 +440,7 @@ void DivPlatformMiniGumby::reset()
 {
   while ( !writes.empty() ) writes.pop();
   std::fill_n( regPool.data(), regPool.size(), 0 );
-  for ( int i = 0; i < chan.size(); i++ )
+  for ( size_t i = 0; i < chan.size(); i++ )
   {
     chan[i] = DivPlatformMiniGumby::Channel();
     chan[i].std.setEngine( parent );
@@ -457,7 +481,7 @@ void DivPlatformMiniGumby::updateROMWave( size_t i )
   int data = 0;
   DivWavetable* w = parent->getWave( i );
 
-  if ( ramMode && i >= 0 && i < 4 )
+  if ( ramMode && i < 4 )
     rWrite( minnie_device::WAVEIDX, i );
 
   for ( int j = 0; j < 64; j++ )
@@ -486,7 +510,7 @@ void DivPlatformMiniGumby::updateROMWave( size_t i )
 
 void DivPlatformMiniGumby::notifyWaveChange( int wave )
 {
-  for ( int i = 0; i < chan.size(); i++ )
+  for ( size_t i = 0; i < chan.size(); i++ )
   {
     if ( chan[i].wave == wave )
     {
@@ -498,7 +522,7 @@ void DivPlatformMiniGumby::notifyWaveChange( int wave )
 
 void DivPlatformMiniGumby::notifyInsDeletion( void* ins )
 {
-  for ( int i = 0; i < chan.size(); i++ )
+  for ( size_t i = 0; i < chan.size(); i++ )
   {
     chan[i].std.notifyInsDeletion( (DivInstrument*)ins );
   }
@@ -509,7 +533,7 @@ void DivPlatformMiniGumby::setFlags( const DivConfig& flags )
   chipClock = SAMPLING_FREQUENCY;
   CHECK_CUSTOM_CLOCK;
   rate = SAMPLING_FREQUENCY;
-  for ( int i = 0; i < oscBuf.size(); i++ )
+  for ( size_t i = 0; i < oscBuf.size(); i++ )
   {
     oscBuf[i]->setRate( rate );
   }
@@ -532,7 +556,7 @@ int DivPlatformMiniGumby::init( DivEngine* p, int channels, int sugRate, const D
   parent = p;
   dumpWrites = false;
   skipRegisterWrites = false;
-  for ( int i = 0; i < oscBuf.size(); i++ )
+  for ( size_t i = 0; i < oscBuf.size(); i++ )
   {
     isMuted[i] = false;
     oscBuf[i] = new DivDispatchOscBuffer;
@@ -545,7 +569,7 @@ int DivPlatformMiniGumby::init( DivEngine* p, int channels, int sugRate, const D
 
 void DivPlatformMiniGumby::quit()
 {
-  for ( int i = 0; i < oscBuf.size(); i++ )
+  for ( size_t i = 0; i < oscBuf.size(); i++ )
   {
     delete oscBuf[i];
   }

@@ -880,10 +880,10 @@ String macroSID3WaveMixMode(int id, float val, void* u) {
 String macroHoverMinnieVolume( int id, float val, void* u )
 {
   int v = (int)val;
-  int v2 = v & 0x0f | ( 0x40 - v - 1 ) & 0xf0;
+  int v2 = ( v & 0x0f ) | ( ( 0x40 - v - 1 ) & 0xf0 );
   float f = 1.0f + (float)( v2 & 0x08 ) / 16.0f + (float)( v2 & 0x04 ) / 16.0f + (float)( v2 & 0x02 ) / 16.0f;
   int exp = v2 >> 4;
-  float pow = std::powf( 2.0f, -(float)exp );
+  float pow = std::pow( 2.0f, -(float)exp );
   return fmt::sprintf( "%0.3f", f * pow );
 }
 
